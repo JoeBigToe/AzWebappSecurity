@@ -1,10 +1,7 @@
 param(
     [string]$WafPolicyName,
-    [string[]]$APIs = @(
-        "Calc",
-        "DocInteli"
-    ),
-    [string]$HttpHeaderName = "Ocp-Apim-Subscription-Key",
+    [string[]]$APIs,
+    [string]$HttpHeaderName = "api-subscription-key",
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName
 )
@@ -103,9 +100,6 @@ function Set-ApiKeyRuleInWaf {
         [hashtable]$HttpHeader
     )
 
-    # INFO: trimend('i') is a workaround for an inconsistency in docintel(i) api naming convention in APIM
-    $CustomRuleName = $CustomRuleNameTemplate -f $($api.trimend('i').tolower())
-    
     # Get rule
     try {
         $wafObject = Get-AzFrontDoorWafPolicy -ResourceGroupName $ResourceGroupName -Name $WafPolicyName
@@ -119,12 +113,6 @@ function Set-ApiKeyRuleInWaf {
         $Script:Priority += 6
         
         # Add new custom rule
-        # INFO: trimend('i') is a workaround for an inconsistency visible in docintel(i) api
-        $matchConditionObject1 = New-AzFrontDoorWafMatchConditionObject `
-            -MatchVariable "RequestUri" `
-            -OperatorProperty "Contains" `
-            -MatchValue "/$($api.trimend('i').tolower())"
-
         $matchConditionObject2 = New-AzFrontDoorWafMatchConditionObject `
             -MatchVariable "RequestHeader" `
             -OperatorProperty "Equal" `

@@ -1,19 +1,114 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  branches:
+    include:
+    # - '*'
+    - master
+    # - releases/*
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+  - job: Windows
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - displayName: 'Install dependencies'
+      powershell: |
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+        Install-Module Pester -MinimumVersion 3.4.0 -Scope CurrentUser -Force | Out-Null
+        Install-Module psake -Scope CurrentUser -Force | Out-Null
+        Install-Module PSScriptAnalyzer -Scope CurrentUser -Force | Out-Null
+        
+    - displayName: 'Build Module'
+      powershell: |
+        $testResultsFile = Join-Path $pwd -ChildPath "$PSScriptRoot/TestResults.xml"
+        Invoke-psake build.psake.ps1 -taskList Build -properties @{"TestOutputFile" = $testResultsFile}
+        if ( -not $psake.build_success ) {
+            # Terminate the script to fail the build
+            $Error | Format-List * -Force
+            exit 1;
+        }
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+    # - task: PublishTestResults@2
+    #   inputs:
+    #     testResultsFormat: 'NUnit'
+    #     testResultsFiles: '**/TestResults*.xml'
+    #     failTaskOnFailedTests: true
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    # - powershell: './CI/CI.ps1 -Artifact'
+    #   displayName: 'Prepare Artifact'
+
+    # - task: PublishPipelineArtifact@1
+    #   inputs:
+    #     targetPath: '$(Build.ArtifactStagingDirectory)'
+    #     artifact: 'Modules'
+
+    # - powershell: './CI/CI.ps1 -Analyzer'
+    #   displayName: 'Invoke ScriptAnalyzer'
+
+    # - task: PublishPipelineArtifact@1
+    #   inputs:
+    #     targetPath: '$(Build.SourcesDirectory)'
+    #     artifact: 'Source'
+
+  - job: WindowsPSCore
+    pool:
+      vmImage: 'windows-latest'
+
+    steps:
+    - displayName: 'Install dependencies'
+      pwsh: |
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+        Install-Module Pester -MinimumVersion 3.4.0 -Scope CurrentUser -Force | Out-Null
+        Install-Module psake -Scope CurrentUser -Force | Out-Null
+        Install-Module PSScriptAnalyzer -Scope CurrentUser -Force | Out-Null
+
+    - displayName: 'Build Module'
+      pwsh: |
+        $testResultsFile = Join-Path $pwd -ChildPath "$PSScriptRoot/TestResults.xml"
+        Invoke-psake build.psake.ps1 -taskList Build -properties @{"TestOutputFile" = $testResultsFile}
+        if ( -not $psake.build_success ) {
+            # Terminate the script to fail the build
+            $Error | Format-List * -Force
+            exit 1;
+        }
+
+    # - task: PublishTestResults@2
+    #   inputs:
+    #     testResultsFormat: 'NUnit'
+    #     testResultsFiles: '**/TestResults*.xml'
+    #     failTaskOnFailedTests: true
+
+  # - job: Ubuntu
+  #   pool:
+  #     vmImage: 'ubuntu-latest'
+
+  #   steps:
+  #   - powershell: 'Install-Module -Name Pester -Force'
+  #     displayName: 'Update Pester'
+  #   - powershell: './CI/CI.ps1 -Test'
+  #     displayName: 'Install and Test'
+
+  #   - task: PublishTestResults@2
+  #     inputs:
+  #       testResultsFormat: 'NUnit'
+  #       testResultsFiles: '**/TestResults*.xml'
+  #       failTaskOnFailedTests: true
+
+  # - job: macOS
+  #   pool:
+  #     vmImage: 'macOS-latest'
+
+  #   steps:
+  #   - powershell: 'Install-Module -Name Pester -Force'
+  #     displayName: 'Update Pester'
+  #   - powershell: './CI/CI.ps1 -Test'
+  #     displayName: 'Install and Test'
+
+  #   - task: PublishTestResults@2
+  #     inputs:
+  #       testResultsFormat: 'NUnit'
+  #       testResultsFiles: '**/TestResults*.xml'
+  #       failTaskOnFailedTests: true

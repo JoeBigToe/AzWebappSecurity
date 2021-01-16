@@ -14,15 +14,14 @@ jobs:
     pool:
       vmImage: 'windows-latest'
     steps:
-    - displayName: 'Install dependencies'
-      powershell: |
+    - powershell: |
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
         Install-Module Pester -MinimumVersion 3.4.0 -Scope CurrentUser -Force | Out-Null
         Install-Module psake -Scope CurrentUser -Force | Out-Null
         Install-Module PSScriptAnalyzer -Scope CurrentUser -Force | Out-Null
+      displayName: 'Install dependencies'
         
-    - displayName: 'Build Module'
-      powershell: |
+    - powershell: |
         $testResultsFile = Join-Path $pwd -ChildPath "$PSScriptRoot/TestResults.xml"
         Invoke-psake build.psake.ps1 -taskList Build -properties @{"TestOutputFile" = $testResultsFile}
         if ( -not $psake.build_success ) {
@@ -30,6 +29,7 @@ jobs:
             $Error | Format-List * -Force
             exit 1;
         }
+      displayName: 'Build Module'
 
     # - task: PublishTestResults@2
     #   inputs:
@@ -58,15 +58,14 @@ jobs:
       vmImage: 'windows-latest'
 
     steps:
-    - displayName: 'Install dependencies'
-      pwsh: |
+    - pwsh: |
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
         Install-Module Pester -MinimumVersion 3.4.0 -Scope CurrentUser -Force | Out-Null
         Install-Module psake -Scope CurrentUser -Force | Out-Null
         Install-Module PSScriptAnalyzer -Scope CurrentUser -Force | Out-Null
+      displayName: 'Install dependencies'
 
-    - displayName: 'Build Module'
-      pwsh: |
+    - pwsh: |
         $testResultsFile = Join-Path $pwd -ChildPath "$PSScriptRoot/TestResults.xml"
         Invoke-psake build.psake.ps1 -taskList Build -properties @{"TestOutputFile" = $testResultsFile}
         if ( -not $psake.build_success ) {
@@ -74,6 +73,7 @@ jobs:
             $Error | Format-List * -Force
             exit 1;
         }
+      displayName: 'Build Module'
 
     # - task: PublishTestResults@2
     #   inputs:

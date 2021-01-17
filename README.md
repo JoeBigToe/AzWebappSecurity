@@ -5,9 +5,10 @@
 This powershell module let's you protect you azure webapp api's behind a WAF policy attached to a frontdoor instance
 
 ## TODO
-- Sample Build Workflow:
-    - [x] .init.ps1  -> Bootstrap by installing InvokeBuild from gallery
-    - [x] Clean the BuildOutput folder
+- Basics:
+    - [ ] Add comment based help on cmdlets
+    - [ ] Extract private functions into private folder / Load them on module import
+    - [ ] Create tests
 
 ---------------
 - Build Tasks
